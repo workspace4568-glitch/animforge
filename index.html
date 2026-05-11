@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
+<!-- Google Fonts for font picker -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Open+Sans:wght@300;400;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;700;900&family=Oswald:wght@400;600&family=Raleway:wght@300;400;700&family=Poppins:wght@300;400;600;700&family=Ubuntu:wght@300;400;700&family=Nunito:wght@300;400;700&family=Playfair+Display:wght@400;700&family=Merriweather:wght@300;400;700&family=Source+Code+Pro:wght@400;600&family=Inter:wght@300;400;600;700&family=Pacifico&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
@@ -424,7 +426,32 @@ input[type=range] { accent-color: var(--accent); }
 .row { display: flex; align-items: center; gap: 6px; }
 .full-width { width: 100%; }
 
-/* ═══ NESTING DROP TARGET ═══ */
+/* ═══ RESPONSIVE VIEWPORT BADGE ═══ */
+#viewport-size { display: flex; align-items: center; gap: 6px; }
+#viewport-badge {
+  font-size: 9px; padding: 2px 7px; border-radius: 10px; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase;
+}
+.vp-desktop { background: rgba(108,99,255,0.2); color: var(--accent); border: 1px solid var(--accent); }
+.vp-tablet  { background: rgba(67,233,123,0.15); color: var(--accent3); border: 1px solid var(--accent3); }
+.vp-mobile  { background: rgba(255,101,132,0.15); color: var(--accent2); border: 1px solid var(--accent2); }
+.responsive-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent3);
+  display: inline-block; margin-right: 3px; animation: pulse-dot 1.5s infinite;
+}
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+/* ═══ FONT PICKER ═══ */
+.font-row { display: flex; gap: 4px; }
+.font-row select { flex: 1; }
+.font-preview { font-size: 15px; line-height: 1; padding: 2px 4px; min-width: 28px; text-align: center; cursor: pointer; }
+/* ═══ CONTEXT PROPS ═══ */
+.prop-group[data-ctx] { transition: opacity 0.15s; }
+.prop-group.ctx-hidden { display: none !important; }
+/* ═══ CLIP PATH PREVIEW ═══ */
+#clip-preview-box {
+  width: 48px; height: 48px; background: var(--accent); border-radius: 4px;
+  margin: 4px auto; display: block; transition: clip-path 0.3s;
+}
 .df-elem.nest-target {
   outline: 2px dashed var(--accent3) !important;
   outline-offset: -2px;
@@ -612,10 +639,11 @@ input[type=range] { accent-color: var(--accent); }
         <div class="canvas-tool" onclick="redoAction()" title="Redo">↪ Redo</div>
         <div class="canvas-tool" onclick="toggleSplitPreview()" id="split-toggle" title="Live split preview">⊟ Split</div>
         <div id="viewport-size">
-          <select onchange="setViewport(this.value)" title="Viewport">
-            <option value="1200x800">Desktop</option>
-            <option value="768x1024">Tablet</option>
-            <option value="375x812">Mobile</option>
+          <span id="viewport-badge" class="vp-desktop">🖥 Desktop</span>
+          <select onchange="setViewport(this.value)" title="Viewport" id="viewport-select">
+            <option value="1200x800">🖥 Desktop</option>
+            <option value="768x1024">📱 Tablet</option>
+            <option value="375x812">📲 Mobile</option>
             <option value="custom">Custom</option>
           </select>
         </div>
@@ -729,64 +757,204 @@ input[type=range] { accent-color: var(--accent); }
 
     <!-- STYLE TAB -->
     <div class="prop-panel active" id="tab-style">
-      <div class="prop-group">
+      <!-- SPACING — all elements -->
+      <div class="prop-group" data-ctx="all">
         <div class="panel-title" onclick="toggleSection(this)">Spacing <i class="chevron">▾</i></div>
         <div class="panel-body">
           <div class="prop-row"><span class="prop-label">Width</span><input class="prop-input" id="p-width" placeholder="auto" oninput="applyStyle('width',this.value)"></div>
           <div class="prop-row"><span class="prop-label">Height</span><input class="prop-input" id="p-height" placeholder="auto" oninput="applyStyle('height',this.value)"></div>
+          <div class="prop-row"><span class="prop-label">Min-W</span><input class="prop-input" id="p-minw" placeholder="0" oninput="applyStyle('minWidth',this.value)"></div>
+          <div class="prop-row"><span class="prop-label">Max-W</span><input class="prop-input" id="p-maxw" placeholder="none" oninput="applyStyle('maxWidth',this.value)"></div>
           <div class="prop-row-2col">
             <div><label>Padding</label><input class="prop-input" id="p-padding" placeholder="0px" oninput="applyStyle('padding',this.value)"></div>
             <div><label>Margin</label><input class="prop-input" id="p-margin" placeholder="0px" oninput="applyStyle('margin',this.value)"></div>
           </div>
         </div>
       </div>
-      <div class="prop-group">
+      <!-- BACKGROUND — containers, buttons -->
+      <div class="prop-group" data-ctx="bg">
         <div class="panel-title" onclick="toggleSection(this)">Background <i class="chevron">▾</i></div>
         <div class="panel-body">
           <div class="prop-row"><span class="prop-label">BG Color</span><input class="prop-input" type="color" id="p-bgcolor" oninput="applyStyle('backgroundColor',this.value)"></div>
           <div class="prop-row"><span class="prop-label">BG Image</span><input class="prop-input" id="p-bgimage" placeholder="url(...)" oninput="applyStyle('backgroundImage',this.value)"></div>
           <div class="prop-row"><span class="prop-label">BG Size</span>
             <select class="prop-input" id="p-bgsize" onchange="applyStyle('backgroundSize',this.value)">
-              <option value="">--</option><option>cover</option><option>contain</option><option>auto</option>
+              <option value="">--</option><option>cover</option><option>contain</option><option>auto</option><option>100% 100%</option>
+            </select>
+          </div>
+          <div class="prop-row"><span class="prop-label">BG Pos</span>
+            <select class="prop-input" id="p-bgpos" onchange="applyStyle('backgroundPosition',this.value)">
+              <option value="">--</option><option>center</option><option>top</option><option>bottom</option><option>left</option><option>right</option>
             </select>
           </div>
           <div class="prop-row"><span class="prop-label">Gradient</span><input class="prop-input" id="p-gradient" placeholder="linear-gradient(...)" oninput="applyStyle('backgroundImage',this.value)"></div>
           <div class="prop-row"><span class="prop-label">Opacity</span><input type="range" class="prop-input" id="p-opacity" min="0" max="1" step="0.01" oninput="applyStyle('opacity',this.value)"></div>
         </div>
       </div>
-      <div class="prop-group">
+      <!-- TYPOGRAPHY — text elements -->
+      <div class="prop-group" data-ctx="text">
         <div class="panel-title" onclick="toggleSection(this)">Typography <i class="chevron">▾</i></div>
         <div class="panel-body">
-          <div class="prop-row"><span class="prop-label">Color</span><input type="color" class="prop-input" id="p-color" oninput="applyStyle('color',this.value)"></div>
-          <div class="prop-row"><span class="prop-label">Font Size</span><input class="prop-input" id="p-fontsize" placeholder="16px" oninput="applyStyle('fontSize',this.value)"></div>
-          <div class="prop-row"><span class="prop-label">Font Family</span><input class="prop-input" id="p-fontfamily" placeholder="sans-serif" oninput="applyStyle('fontFamily',this.value)"></div>
+          <div class="prop-row"><span class="prop-label">Color</span><input type="color" class="prop-input" id="p-color" oninput="applyStyleAndInner('color',this.value)"></div>
+          <div class="prop-row"><span class="prop-label">Font Size</span><input class="prop-input" id="p-fontsize" placeholder="16px" oninput="applyStyleAndInner('fontSize',this.value)"></div>
+          <div class="prop-row"><span class="prop-label">Font</span>
+            <div class="font-row">
+              <select class="prop-input" id="p-fontfamily" onchange="applyStyleAndInner('fontFamily',this.value);document.getElementById('p-font-preview').style.fontFamily=this.value">
+                <option value="">-- Font --</option>
+                <optgroup label="System">
+                  <option value="sans-serif">Sans-Serif</option>
+                  <option value="serif">Serif</option>
+                  <option value="monospace">Monospace</option>
+                  <option value="Arial, sans-serif">Arial</option>
+                  <option value="Helvetica, sans-serif">Helvetica</option>
+                  <option value="'Georgia', serif">Georgia</option>
+                  <option value="'Times New Roman', serif">Times New Roman</option>
+                  <option value="'Verdana', sans-serif">Verdana</option>
+                  <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                  <option value="Impact, sans-serif">Impact</option>
+                  <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                  <option value="'Courier New', monospace">Courier New</option>
+                </optgroup>
+                <optgroup label="Google Fonts">
+                  <option value="'Inter', sans-serif">Inter</option>
+                  <option value="'Roboto', sans-serif">Roboto</option>
+                  <option value="'Open Sans', sans-serif">Open Sans</option>
+                  <option value="'Lato', sans-serif">Lato</option>
+                  <option value="'Montserrat', sans-serif">Montserrat</option>
+                  <option value="'Oswald', sans-serif">Oswald</option>
+                  <option value="'Raleway', sans-serif">Raleway</option>
+                  <option value="'Poppins', sans-serif">Poppins</option>
+                  <option value="'Ubuntu', sans-serif">Ubuntu</option>
+                  <option value="'Nunito', sans-serif">Nunito</option>
+                  <option value="'Playfair Display', serif">Playfair Display</option>
+                  <option value="'Merriweather', serif">Merriweather</option>
+                  <option value="'Source Code Pro', monospace">Source Code Pro</option>
+                  <option value="'Pacifico', cursive">Pacifico</option>
+                  <option value="'Dancing Script', cursive">Dancing Script</option>
+                </optgroup>
+              </select>
+              <span class="font-preview" id="p-font-preview" title="Font preview">Aa</span>
+            </div>
+          </div>
           <div class="prop-row"><span class="prop-label">Weight</span>
-            <select class="prop-input" id="p-fontweight" onchange="applyStyle('fontWeight',this.value)">
-              <option value="">--</option><option>300</option><option>400</option><option>500</option><option>600</option><option>700</option><option>900</option>
+            <select class="prop-input" id="p-fontweight" onchange="applyStyleAndInner('fontWeight',this.value)">
+              <option value="">--</option><option value="300">Light 300</option><option value="400">Regular 400</option>
+              <option value="500">Medium 500</option><option value="600">Semi-Bold 600</option>
+              <option value="700">Bold 700</option><option value="900">Black 900</option>
+            </select>
+          </div>
+          <div class="prop-row"><span class="prop-label">Style</span>
+            <select class="prop-input" id="p-fontstyle" onchange="applyStyleAndInner('fontStyle',this.value)">
+              <option value="">--</option><option>normal</option><option>italic</option><option>oblique</option>
             </select>
           </div>
           <div class="prop-row"><span class="prop-label">Align</span>
-            <select class="prop-input" id="p-textalign" onchange="applyStyle('textAlign',this.value)">
+            <select class="prop-input" id="p-textalign" onchange="applyStyleAndInner('textAlign',this.value)">
               <option value="">--</option><option>left</option><option>center</option><option>right</option><option>justify</option>
             </select>
           </div>
-          <div class="prop-row"><span class="prop-label">Line Height</span><input class="prop-input" id="p-lineheight" placeholder="1.5" oninput="applyStyle('lineHeight',this.value)"></div>
+          <div class="prop-row"><span class="prop-label">Line Height</span><input class="prop-input" id="p-lineheight" placeholder="1.5" oninput="applyStyleAndInner('lineHeight',this.value)"></div>
+          <div class="prop-row"><span class="prop-label">Letter Spacing</span><input class="prop-input" id="p-letterspacing" placeholder="0px" oninput="applyStyleAndInner('letterSpacing',this.value)"></div>
+          <div class="prop-row"><span class="prop-label">Decoration</span>
+            <select class="prop-input" id="p-textdec" onchange="applyStyleAndInner('textDecoration',this.value)">
+              <option value="">--</option><option>none</option><option>underline</option><option>overline</option><option>line-through</option>
+            </select>
+          </div>
+          <div class="prop-row"><span class="prop-label">Transform</span>
+            <select class="prop-input" id="p-texttransform" onchange="applyStyleAndInner('textTransform',this.value)">
+              <option value="">--</option><option>none</option><option>uppercase</option><option>lowercase</option><option>capitalize</option>
+            </select>
+          </div>
         </div>
       </div>
-      <div class="prop-group">
+      <!-- BORDER — all elements -->
+      <div class="prop-group" data-ctx="all">
         <div class="panel-title" onclick="toggleSection(this)">Border <i class="chevron">▾</i></div>
         <div class="panel-body">
           <div class="prop-row"><span class="prop-label">Border</span><input class="prop-input" id="p-border" placeholder="1px solid #000" oninput="applyStyle('border',this.value)"></div>
           <div class="prop-row"><span class="prop-label">Radius</span><input class="prop-input" id="p-radius" placeholder="0px" oninput="applyStyle('borderRadius',this.value)"></div>
           <div class="prop-row"><span class="prop-label">Box Shadow</span><input class="prop-input" id="p-shadow" placeholder="0 2px 8px #0002" oninput="applyStyle('boxShadow',this.value)"></div>
+          <div class="prop-row"><span class="prop-label">Outline</span><input class="prop-input" id="p-outline" placeholder="2px solid blue" oninput="applyStyle('outline',this.value)"></div>
         </div>
       </div>
-      <div class="prop-group">
+      <!-- MEDIA (img, video) -->
+      <div class="prop-group" data-ctx="media">
+        <div class="panel-title" onclick="toggleSection(this)">Media <i class="chevron">▾</i></div>
+        <div class="panel-body">
+          <div class="prop-row"><span class="prop-label">Object Fit</span>
+            <select class="prop-input" id="p-objfit" onchange="applyInnerOrSelf('objectFit',this.value)">
+              <option value="">--</option><option>fill</option><option>cover</option><option>contain</option><option>none</option><option>scale-down</option>
+            </select>
+          </div>
+          <div class="prop-row"><span class="prop-label">Object Pos</span>
+            <select class="prop-input" id="p-objpos" onchange="applyInnerOrSelf('objectPosition',this.value)">
+              <option value="">--</option><option>center</option><option>top</option><option>bottom</option><option>left</option><option>right</option><option>top left</option><option>top right</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <!-- CLIP PATH — divs, images, videos -->
+      <div class="prop-group" data-ctx="clip">
+        <div class="panel-title" onclick="toggleSection(this)">Clip Path <i class="chevron">▾</i></div>
+        <div class="panel-body">
+          <div id="clip-preview-box"></div>
+          <div class="prop-row"><span class="prop-label">Shape</span>
+            <select class="prop-input" id="p-clippreset" onchange="applyClipPreset(this.value)">
+              <option value="">None</option>
+              <option value="circle(50%)">⬤ Circle</option>
+              <option value="ellipse(55% 40%)">⬭ Ellipse</option>
+              <option value="polygon(50% 0%,0% 100%,100% 100%)">▲ Triangle Up</option>
+              <option value="polygon(50% 100%,0% 0%,100% 0%)">▼ Triangle Down</option>
+              <option value="polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)">⬠ Pentagon</option>
+              <option value="polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)">⬡ Hexagon</option>
+              <option value="polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)">★ Star</option>
+              <option value="polygon(0% 0%,75% 0%,100% 50%,75% 100%,0% 100%)">➤ Arrow Right</option>
+              <option value="polygon(25% 0%,100% 0%,100% 100%,25% 100%,0% 50%)">◄ Arrow Left</option>
+              <option value="polygon(0% 20%,60% 20%,60% 0%,100% 50%,60% 100%,60% 80%,0% 80%)">⇒ Chevron</option>
+              <option value="polygon(20% 0%,80% 0%,100% 20%,100% 80%,80% 100%,20% 100%,0% 80%,0% 20%)">⬟ Octagon</option>
+              <option value="polygon(50% 0%,100% 50%,50% 100%,0% 50%)">◆ Diamond</option>
+              <option value="inset(10% round 20px)">▢ Rounded Inset</option>
+              <option value="inset(0 0 50% 0)">▣ Top Half</option>
+              <option value="inset(50% 0 0 0)">▤ Bottom Half</option>
+              <option value="custom">✏ Custom…</option>
+            </select>
+          </div>
+          <div class="prop-row ctx-hidden" id="clip-custom-row">
+            <span class="prop-label">Custom</span>
+            <input class="prop-input" id="p-clipcustom" placeholder="polygon(0 0, 100% 0, ...)" oninput="applyStyle('clipPath',this.value);updateClipPreview(this.value)">
+          </div>
+        </div>
+      </div>
+      <!-- EFFECTS — all elements -->
+      <div class="prop-group" data-ctx="all">
         <div class="panel-title" onclick="toggleSection(this)">Effects <i class="chevron">▾</i></div>
         <div class="panel-body">
           <div class="prop-row"><span class="prop-label">Transform</span><input class="prop-input" id="p-transform" placeholder="rotate(45deg)" oninput="applyStyle('transform',this.value)"></div>
           <div class="prop-row"><span class="prop-label">Transition</span><input class="prop-input" id="p-transition" placeholder="all 0.3s ease" oninput="applyStyle('transition',this.value)"></div>
-          <div class="prop-row"><span class="prop-label">Filter</span><input class="prop-input" id="p-filter" placeholder="blur(4px)" oninput="applyStyle('filter',this.value)"></div>
+          <div class="prop-row"><span class="prop-label">Filter</span>
+            <select class="prop-input" id="p-filterpreset" onchange="applyFilterPreset(this.value)">
+              <option value="">None</option>
+              <option value="blur(4px)">Blur</option>
+              <option value="brightness(1.3)">Brighten</option>
+              <option value="contrast(1.5)">Contrast</option>
+              <option value="grayscale(1)">Grayscale</option>
+              <option value="sepia(1)">Sepia</option>
+              <option value="saturate(2)">Saturate</option>
+              <option value="hue-rotate(90deg)">Hue Rotate</option>
+              <option value="invert(1)">Invert</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </div>
+          <div class="prop-row ctx-hidden" id="filter-custom-row">
+            <span class="prop-label">Custom</span>
+            <input class="prop-input" id="p-filter" placeholder="blur(4px) brightness(1.2)" oninput="applyStyle('filter',this.value)">
+          </div>
+          <div class="prop-row"><span class="prop-label">Mix Blend</span>
+            <select class="prop-input" id="p-mixblend" onchange="applyStyle('mixBlendMode',this.value)">
+              <option value="">normal</option><option>multiply</option><option>screen</option><option>overlay</option>
+              <option>darken</option><option>lighten</option><option>color-dodge</option><option>color-burn</option><option>difference</option>
+            </select>
+          </div>
           <div class="prop-row"><span class="prop-label">Animation</span><input class="prop-input" id="p-animation" placeholder="fadeIn 1s ease" oninput="applyStyle('animation',this.value)"></div>
           <div class="prop-row"><span class="prop-label">Overflow</span>
             <select class="prop-input" id="p-overflow" onchange="applyStyle('overflow',this.value)">
@@ -796,7 +964,7 @@ input[type=range] { accent-color: var(--accent); }
           <div class="prop-row"><span class="prop-label">Z-Index</span><input class="prop-input" id="p-zindex" placeholder="0" oninput="applyStyle('zIndex',this.value)"></div>
           <div class="prop-row"><span class="prop-label">Cursor</span>
             <select class="prop-input" id="p-cursor" onchange="applyStyle('cursor',this.value)">
-              <option value="">--</option><option>pointer</option><option>default</option><option>grab</option><option>crosshair</option><option>text</option><option>not-allowed</option>
+              <option value="">--</option><option>pointer</option><option>default</option><option>grab</option><option>crosshair</option><option>text</option><option>not-allowed</option><option>zoom-in</option><option>zoom-out</option>
             </select>
           </div>
         </div>
@@ -1393,9 +1561,11 @@ function selectElement(el) {
   selectedEl = el;
   if (el) {
     el.classList.add('selected');
+    applyContextProps(el.dataset.type);
     updatePropPanel();
     updateElemCodePanel();
-    document.getElementById('selected-label').textContent = `${el.dataset.type || 'element'} · ${el.dataset.id || ''}`;
+    const typeLabel = el.dataset.type || 'element';
+    document.getElementById('selected-label').textContent = `${typeLabel} · ${el.dataset.id || ''} ${currentViewport !== 'desktop' ? '📱' + currentViewport : ''}`;
   }
 }
 
@@ -1443,12 +1613,72 @@ canvasScroll.addEventListener('wheel', e => {
   if (e.ctrlKey) { e.preventDefault(); e.deltaY < 0 ? zoomIn() : zoomOut(); }
 }, { passive: false });
 
-// ═══════════════════════════════ VIEWPORT ═══════════════════════════════
+// ═══════════════════════════════ RESPONSIVE SYSTEM ═══════════════════════════════
+const responsiveStyles = {}; // { 'el-id': { desktop:{}, tablet:{}, mobile:{} } }
+let currentViewport = 'desktop';
+
 function setViewport(v) {
   const f = document.getElementById('canvas-frame');
-  if (v === '1200x800') { f.style.width = '1200px'; f.style.height = '800px'; }
-  else if (v === '768x1024') { f.style.width = '768px'; f.style.height = '1024px'; }
-  else if (v === '375x812') { f.style.width = '375px'; f.style.height = '812px'; }
+  const badge = document.getElementById('viewport-badge');
+  
+  if (v === '1200x800') {
+    f.style.width = '1200px'; f.style.height = '800px';
+    currentViewport = 'desktop';
+    if (badge) { badge.textContent = '🖥 Desktop'; badge.className = 'vp-desktop'; }
+  } else if (v === '768x1024') {
+    f.style.width = '768px'; f.style.height = '1024px';
+    currentViewport = 'tablet';
+    if (badge) { badge.textContent = '📱 Tablet'; badge.className = 'vp-tablet'; }
+  } else if (v === '375x812') {
+    f.style.width = '375px'; f.style.height = '812px';
+    currentViewport = 'mobile';
+    if (badge) { badge.textContent = '📲 Mobile'; badge.className = 'vp-mobile'; }
+  }
+  
+  // Apply all viewport-specific styles to canvas elements
+  applyViewportStyles();
+  updatePropPanel();
+}
+
+function applyViewportStyles() {
+  canvas.querySelectorAll('.df-elem').forEach(el => {
+    const id = el.dataset.id;
+    if (!responsiveStyles[id]) return;
+    
+    // Start fresh from desktop styles
+    const desktop = responsiveStyles[id].desktop || {};
+    const override = currentViewport !== 'desktop' ? (responsiveStyles[id][currentViewport] || {}) : {};
+    
+    // Apply desktop base
+    Object.entries(desktop).forEach(([prop, val]) => el.style[prop] = val);
+    // Apply current viewport overrides on top
+    Object.entries(override).forEach(([prop, val]) => el.style[prop] = val);
+  });
+}
+
+function camelToKebab(str) {
+  return str.replace(/([A-Z])/g, m => '-' + m.toLowerCase());
+}
+
+function generateResponsiveCSS(elemClassMap) {
+  const tabletRules = [], mobileRules = [];
+  Object.entries(responsiveStyles).forEach(([id, vps]) => {
+    const cls = elemClassMap[id];
+    if (!cls) return;
+    const sel = '.' + cls;
+    if (vps.tablet && Object.keys(vps.tablet).length) {
+      const props = Object.entries(vps.tablet).map(([k,v]) => '    ' + camelToKebab(k) + ': ' + v + ';').join('\n');
+      tabletRules.push('  ' + sel + ' {\n' + props + '\n  }');
+    }
+    if (vps.mobile && Object.keys(vps.mobile).length) {
+      const props = Object.entries(vps.mobile).map(([k,v]) => '    ' + camelToKebab(k) + ': ' + v + ';').join('\n');
+      mobileRules.push('  ' + sel + ' {\n' + props + '\n  }');
+    }
+  });
+  let css = '';
+  if (tabletRules.length) css += '\n/* ── Tablet ≤768px ── */\n@media (max-width: 768px) {\n' + tabletRules.join('\n') + '\n}\n';
+  if (mobileRules.length) css += '\n/* ── Mobile ≤375px ── */\n@media (max-width: 375px) {\n' + mobileRules.join('\n') + '\n}\n';
+  return css;
 }
 
 // ═══════════════════════════════ GRID/RULER TOGGLE ═══════════════════════════════
@@ -1471,20 +1701,26 @@ function updatePropPanel() {
   const cs = getComputedStyle(selectedEl);
   const s = selectedEl.style;
 
+  // Read inner text element styles for typography (since text props apply to inner element)
+  const inner = selectedEl.querySelector('h1,h2,h3,h4,h5,h6,p,span,a,button,li,label');
+  const ts = inner ? inner.style : s; // typography source
+
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
   set('p-width', s.width);
   set('p-height', s.height);
+  set('p-minw', s.minWidth);
+  set('p-maxw', s.maxWidth);
   set('p-padding', s.padding);
   set('p-margin', s.margin);
   set('p-border', s.border);
   set('p-radius', s.borderRadius);
   set('p-shadow', s.boxShadow);
-  set('p-fontsize', s.fontSize);
-  set('p-fontfamily', s.fontFamily);
-  set('p-lineheight', s.lineHeight);
+  set('p-outline', s.outline);
+  set('p-fontsize', ts.fontSize || s.fontSize);
+  set('p-lineheight', ts.lineHeight || s.lineHeight);
+  set('p-letterspacing', ts.letterSpacing || s.letterSpacing);
   set('p-transform', s.transform === 'none' ? '' : s.transform);
   set('p-transition', s.transition);
-  set('p-filter', s.filter === 'none' ? '' : s.filter);
   set('p-animation', s.animation);
   set('p-zindex', s.zIndex);
   set('p-bgimage', s.backgroundImage === 'none' ? '' : s.backgroundImage);
@@ -1500,18 +1736,53 @@ function updatePropPanel() {
   set('p-colspan', s.gridColumn);
   set('p-rowspan', s.gridRow);
   set('p-id', selectedEl.id || '');
-  set('p-class', selectedEl.className.replace('df-elem','').replace('selected','').trim());
+  set('p-class', selectedEl.className.replace(/df-elem|selected|nest-target/g,'').trim());
+
+  // Typography - sync select fields
+  const syncSel = (id, val) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const opt = Array.from(el.options).find(o => o.value === val || o.value.includes(val));
+    if (opt) el.value = opt.value;
+    else el.value = '';
+  };
+  const fontVal = ts.fontFamily || s.fontFamily || '';
+  syncSel('p-fontfamily', fontVal);
+  syncSel('p-fontweight', ts.fontWeight || s.fontWeight || '');
+  syncSel('p-fontstyle', ts.fontStyle || s.fontStyle || '');
+  syncSel('p-textalign', ts.textAlign || s.textAlign || '');
+  syncSel('p-textdec', ts.textDecoration || s.textDecoration || '');
+  syncSel('p-texttransform', ts.textTransform || s.textTransform || '');
+  syncSel('p-overflow', s.overflow || '');
+  syncSel('p-cursor', s.cursor || '');
+  syncSel('p-bgsize', s.backgroundSize || '');
+  syncSel('p-bgpos', s.backgroundPosition || '');
+  syncSel('p-position', s.position || '');
+
+  // Font preview
+  const fPrev = document.getElementById('p-font-preview');
+  if (fPrev) fPrev.style.fontFamily = fontVal;
 
   // Content text
-  const textNode = selectedEl.childNodes[0];
   const firstElem = selectedEl.querySelector(':not(.elem-overlay):not(.elem-label):not(.resize-handle)');
   set('p-content', firstElem ? firstElem.textContent : '');
 
   try { set('p-bgcolor', rgbToHex(s.backgroundColor)); } catch(e){}
-  try { set('p-color', rgbToHex(s.color)); } catch(e){}
+  try { set('p-color', rgbToHex(ts.color || s.color)); } catch(e){}
   set('p-opacity', s.opacity || '1');
-  set('p-fontweight', s.fontWeight);
-  set('p-textalign', s.textAlign);
+
+  // Clip path
+  const clipVal = s.clipPath || '';
+  const clipPreset = document.getElementById('p-clippreset');
+  if (clipPreset) {
+    const match = Array.from(clipPreset.options).find(o => o.value === clipVal);
+    clipPreset.value = match ? clipVal : (clipVal ? 'custom' : '');
+    if (clipVal && !match) {
+      set('p-clipcustom', clipVal);
+      document.getElementById('clip-custom-row')?.classList.remove('ctx-hidden');
+    }
+  }
+  updateClipPreview(clipVal);
 
   updateLayoutPanel();
 }
@@ -1548,11 +1819,128 @@ function rgbToHex(rgb) {
   return '#' + m.slice(0,3).map(n => parseInt(n).toString(16).padStart(2,'0')).join('');
 }
 
+// ═══════════════════════════════ CONTEXT-AWARE PROPERTIES ═══════════════════════════════
+const CTX_GROUPS = {
+  // which data-ctx groups are shown for each element type
+  h1: ['all','text'], h2: ['all','text'], h3: ['all','text'], h4: ['all','text'], h5: ['all','text'], h6: ['all','text'],
+  p: ['all','text','bg'], span: ['all','text'], a: ['all','text'],
+  button: ['all','text','bg'], input: ['all','text','bg'],
+  ul: ['all','text','bg'], ol: ['all','text','bg'], li: ['all','text'],
+  label: ['all','text'],
+  img: ['all','border','media','clip'],
+  video: ['all','border','media','clip'],
+  div: ['all','bg','clip'], section: ['all','bg','clip'],
+  nav: ['all','bg'],
+  flexbox: ['all','bg','clip'], 'grid-container': ['all','bg','clip'],
+  card: ['all','bg','clip'], hero: ['all','bg','clip'],
+  hr: ['all','bg'],
+  snippet: ['all','bg','clip','text','media'],
+};
+const LAYOUT_SHOW = ['div','section','nav','flexbox','grid-container','card','hero','snippet'];
+const TEXT_PROPS = ['color','fontSize','fontFamily','fontWeight','fontStyle','textAlign','lineHeight','letterSpacing','textDecoration','textTransform'];
+
+function applyContextProps(type) {
+  const base = type?.toLowerCase() || 'div';
+  const allowed = CTX_GROUPS[base] || ['all','bg','text','clip','media'];
+
+  // Show/hide style tab groups
+  document.querySelectorAll('#tab-style .prop-group[data-ctx]').forEach(g => {
+    const ctx = g.getAttribute('data-ctx');
+    const show = ctx === 'all' || allowed.includes(ctx);
+    g.classList.toggle('ctx-hidden', !show);
+  });
+
+  // Show/hide Layout tab
+  const showLayout = LAYOUT_SHOW.includes(base) || base.startsWith('snippet');
+  const layoutTab = document.querySelector('[data-tab="layout"]');
+  if (layoutTab) layoutTab.style.display = showLayout ? '' : 'none';
+
+  // Content tab: src/alt/href visibility
+  const isMedia = ['img','video'].includes(base);
+  const isText = CTX_GROUPS[base]?.includes('text');
+  const rows = ['p-content','p-href','p-src','p-alt'];
+  rows.forEach(id => {
+    const row = document.getElementById(id)?.closest('.prop-row');
+    if (!row) return;
+    if (id === 'p-content') row.style.display = isMedia ? 'none' : '';
+    if (id === 'p-src') row.style.display = isMedia ? '' : 'none';
+    if (id === 'p-alt') row.style.display = isMedia ? '' : 'none';
+    if (id === 'p-href') row.style.display = ['a','button'].includes(base) ? '' : 'none';
+  });
+}
+
 function applyStyle(prop, val) {
   if (!selectedEl) return;
   selectedEl.style[prop] = val;
+
+  // Store responsive style
+  const id = selectedEl.dataset.id;
+  if (id) {
+    if (!responsiveStyles[id]) responsiveStyles[id] = {};
+    if (!responsiveStyles[id][currentViewport]) responsiveStyles[id][currentViewport] = {};
+    responsiveStyles[id][currentViewport][prop] = val;
+  }
+
   updateElemCodePanel();
   onCanvasChange();
+}
+
+// Apply style to wrapper AND inner text node (fixes color/font on headings/paragraphs)
+function applyStyleAndInner(prop, val) {
+  if (!selectedEl) return;
+  selectedEl.style[prop] = val;
+  const inner = selectedEl.querySelector('h1,h2,h3,h4,h5,h6,p,span,a,button,li,label,td,th');
+  if (inner) inner.style[prop] = val;
+  // Store responsive
+  const id = selectedEl.dataset.id;
+  if (id) {
+    if (!responsiveStyles[id]) responsiveStyles[id] = {};
+    if (!responsiveStyles[id][currentViewport]) responsiveStyles[id][currentViewport] = {};
+    responsiveStyles[id][currentViewport][prop] = val;
+  }
+  // Update font preview
+  if (prop === 'fontFamily') {
+    const prev = document.getElementById('p-font-preview');
+    if (prev) prev.style.fontFamily = val;
+  }
+  updateElemCodePanel();
+  onCanvasChange();
+}
+
+// Apply to inner img/video element if wrapper is df-elem
+function applyInnerOrSelf(prop, val) {
+  if (!selectedEl) return;
+  const inner = selectedEl.querySelector('img,video');
+  const target = inner || selectedEl;
+  target.style[prop] = val;
+  onCanvasChange();
+}
+
+// ═══════════════════════════════ CLIP PATH ═══════════════════════════════
+function applyClipPreset(val) {
+  if (val === 'custom') {
+    document.getElementById('clip-custom-row').classList.remove('ctx-hidden');
+    return;
+  }
+  document.getElementById('clip-custom-row').classList.add('ctx-hidden');
+  if (!selectedEl) return;
+  applyStyle('clipPath', val);
+  updateClipPreview(val);
+}
+
+function updateClipPreview(val) {
+  const box = document.getElementById('clip-preview-box');
+  if (box) box.style.clipPath = val || '';
+}
+
+// ═══════════════════════════════ FILTER PRESETS ═══════════════════════════════
+function applyFilterPreset(val) {
+  if (val === 'custom') {
+    document.getElementById('filter-custom-row').classList.remove('ctx-hidden');
+    return;
+  }
+  document.getElementById('filter-custom-row').classList.add('ctx-hidden');
+  applyStyle('filter', val);
 }
 
 function applyContent(val) {
@@ -2325,11 +2713,11 @@ function getExportContent() {
   const clone = canvas.cloneNode(true);
   clone.querySelectorAll('.elem-overlay,.elem-label,.resize-handle,.drop-zone-indicator').forEach(e => e.remove());
   clone.querySelectorAll('.df-elem').forEach(el => {
-    el.classList.remove('df-elem', 'selected');
-    delete el.dataset.id;
+    el.classList.remove('df-elem', 'selected', 'nest-target');
     delete el.dataset.type;
   });
 
+  const elemClassMap = {}; // dataId → assigned CSS class
   let css = '/* ── DevForge Extracted Styles ── */\n';
   let counter = 0;
 
@@ -2338,14 +2726,22 @@ function getExportContent() {
     if (!styleStr) return;
     counter++;
     const cls = 'df-s' + counter;
+    const dataId = el.getAttribute('data-id');
+    if (dataId) elemClassMap[dataId] = cls;
     css += '\n.' + cls + ' {\n' + styleAttrToCSS(styleStr) + '\n}\n';
     el.classList.add(cls);
     el.removeAttribute('style');
   });
 
-  // Append any per-element custom CSS blocks
+  // Strip remaining data-id attrs
+  clone.querySelectorAll('[data-id]').forEach(el => el.removeAttribute('data-id'));
+
+  // Responsive media queries
+  css += generateResponsiveCSS(elemClassMap);
+
+  // Per-element custom CSS blocks
   Object.entries(customCssMap).forEach(([id, code]) => {
-    if (code && code.trim()) css += '\n/* Custom block: ' + id + ' */\n' + code.trim() + '\n';
+    if (code && code.trim()) css += '\n/* Custom: ' + id + ' */\n' + code.trim() + '\n';
   });
 
   return { html: clone.innerHTML.trim(), css };
@@ -2540,4 +2936,3 @@ console.log('%c⚡ DevForge Studio loaded', 'color:#6c63ff;font-size:16px;font-w
 </script>
 </body>
 </html>
-
